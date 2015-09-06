@@ -96,7 +96,7 @@ int main(){
 
 	std::clock_t begin = clock();
 
-	Graph p = algorithmA(test_graph);
+	Graph p = algorithmA(&test_graph);
 
 	clock_t end = clock();
 
