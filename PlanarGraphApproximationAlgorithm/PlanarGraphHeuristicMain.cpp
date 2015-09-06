@@ -81,7 +81,7 @@ void writeToFile(std::list<std::tuple<int, int, double>> edge_list, bool isPlana
 int main(){
 
 	std::list<std::tuple<int, int, double>> edge_list;
-	edge_list = loadFromFile("C:\\Users\\Nathan\\Desktop\\brca.txt");
+	edge_list = loadFromFile("C:\\Users\\Nathan\\Desktop\\dolphin.txt");
 
 	std::list<std::pair<int, int>> unweighted_edge_list;
 
