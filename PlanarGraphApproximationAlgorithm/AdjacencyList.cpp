@@ -3,6 +3,10 @@
 #include <vector>
 #include <list>
 
+typedef int node;
+typedef std::pair<node, node> edge;
+typedef std::list<edge> edge_list;
+
 class Graph {
 private:
 	std::vector<std::list<int>> adjacencyListArray;
@@ -47,7 +51,7 @@ public:
 		//TODO
 	}
 
-	std::list<std::pair<int, int>> toEdgeList() {
+	edge_list* toEdgeList() {
 		std::list<std::pair<int, int>> edge_list;
 
 		for (size_t i = 0; i < adjacencyListArray.size(); i++) {
@@ -57,7 +61,7 @@ public:
 			}
 		}
 
-		return edge_list;
+		return &edge_list;
 	}
 
 	void printGraph () {

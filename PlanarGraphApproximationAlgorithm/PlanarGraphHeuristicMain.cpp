@@ -10,23 +10,33 @@
 #include "boost/graph/graph_traits.hpp"
 #include "boost/graph/boyer_myrvold_planar_test.hpp"
 
-bool isPlanar(std::list<std::pair<int, int>> edge_list, int numNodes) {
+typedef int node;
+typedef std::pair<int, int> unweighted_edge;
+typedef std::tuple<int, int, double> weighted_edge;
+typedef std::list<unweighted_edge> unweighted_edge_list;
+typedef std::list<weighted_edge> weighted_edge_list;
 
-	typedef boost::adjacency_list<boost::listS, boost::vecS, boost::undirectedS> boostGraph;
-	
-	boostGraph g(numNodes);
+// is_planar is a wrapper for the boost library Boyer-Myrvold planarity test algorithm
+// Parameters: an edge list pointer and the number of nodes in the graph
+// Returns: 'true' if planar and 'false' if not planar
+bool is_planar(Graph *graph) {
 
-	for (std::list<std::pair<int, int>>::iterator iter = edge_list.begin(); iter != edge_list.end(); iter++) {
-		boost::add_edge((*iter).first, (*iter).second, g);
+	unweighted_edge_list *edge_list = (*graph).toEdgeList();
+	boost::adjacency_list<boost::listS, boost::vecS, boost::undirectedS> boost_graph((*graph).nodeCount());
+
+	for (unweighted_edge_list::iterator iter = (*edge_list).begin(); iter != (*edge_list).end(); iter++) {
+		boost::add_edge((*iter).first, (*iter).second, boost_graph);
 	}
 
-	return boyer_myrvold_planarity_test(g);
-
+	return boyer_myrvold_planarity_test(boost_graph);
 }
 
-std::list<std::tuple<int, int, double>> loadFromFile(std::string file_path) {
+// load_from_file loads a graph file with edges in the form 'node node weight' seperated by whitespace
+// Parameters: A string with the path to the file
+// Returns: A weighted edge list
+weighted_edge_list* load_from_file(std::string file_path) {
 
-	std::list<std::tuple<int, int, double>> edge_list;
+	weighted_edge_list edge_list;
 
 	int a, b;
 	double c;
@@ -40,10 +50,13 @@ std::list<std::tuple<int, int, double>> loadFromFile(std::string file_path) {
 		file.close();
 	}
 
-	return edge_list;
+	return &edge_list;
 }
 
-void writeToFile(std::list<std::tuple<int, int, double>> edge_list, bool isPlanar, bool isPlanar2, int initialEdges, long seconds ) {
+// write_to_file writes the graph to a file
+// Parameters: A weighted edge list, the initial number of edges, the number of seconds the filter
+// algorithm took to execute, and the path to the file to write the graph to
+void write_to_file(weighted_edge_list edge_list, int initial_edges, long seconds, std::string file_path ) {
 
 	int a, b;
 	double c;
@@ -53,21 +66,17 @@ void writeToFile(std::list<std::tuple<int, int, double>> edge_list, bool isPlana
 	hours = minutes / 60;
 
 	int resultEdges = edge_list.size();
-	float percentRetained = (float)resultEdges / (float)initialEdges * 100;
-	std::string planar = isPlanar ? "Yes" : "No";
-	std::string planar2 = isPlanar2 ? "Yes" : "No";
+	float percentRetained = (float)resultEdges / (float)initial_edges * 100;
 
 
-	std::ofstream file("C:\\Users\\Nathan\\Desktop\\out.txt");
+	std::ofstream file(file_path);
 
-	file << "Original Planar: " << planar << "\n";
-	file << "Result Planar: " << planar << "\n";
 	file << "Execution time: " << hours << "h " << minutes % 60 << "m " << seconds % 60 << "s\n";
-	file << "Initial number of edges: " << initialEdges << "\n";
+	file << "Initial number of edges: " << initial_edges << "\n";
 	file << "Result number of edges: " << resultEdges << "\n";
 	file << "Percent of edges retained: " << percentRetained << "%\n\n";
 
-	for (std::list<std::tuple<int, int, double>>::iterator iter = edge_list.begin(); iter != edge_list.end(); iter++) {
+	for (weighted_edge_list::iterator iter = edge_list.begin(); iter != edge_list.end(); iter++) {
 		a = std::get<0>(*iter);
 		b = std::get<1>(*iter);
 		c = std::get<2>(*iter);
@@ -75,46 +84,62 @@ void writeToFile(std::list<std::tuple<int, int, double>> edge_list, bool isPlana
 	}
 
 	file.close();
-
 }
 
-int main(){
+/*void maximizePlanar(std::list<std::pair<int, int>> edge_list, std::list<std::pair<int, int>> edge_list_after) {
 
-	std::list<std::tuple<int, int, double>> edge_list;
-	edge_list = loadFromFile("C:\\Users\\Nathan\\Desktop\\dolphin.txt");
+	for (std::list<std::pair<int, int>>::iterator iter = edge_list.begin(); iter != edge_list.end(); iter++) {
+		edge_list_after.push_back(*iter);
+		if (!isPlanar(edge_list_after)){
+			(*graph).removeEdge(*iter);
+		}
+	}
+}*/
 
-	std::list<std::pair<int, int>> unweighted_edge_list;
 
-	Graph test_graph = Graph(0);
+int main(int argc, char* argv[]){
 
-	for (std::list<std::tuple<int, int, double>>::iterator iter = edge_list.begin(); iter != edge_list.end(); iter++) {
-
-		test_graph.addEdge(std::get<0>(*iter), std::get<1>(*iter));
-		unweighted_edge_list.push_back(std::pair<int, int>(std::get<0>(*iter), std::get<1>(*iter)));
-
+	if (argc < 3) {
+		std::cout << "Please provide the path to the graph file to load as well as the path of the file to write the output to.\n";
 	}
 
-	std::clock_t begin = clock();
+	weighted_edge_list *initial_edge_list;
+	unweighted_edge_list unweighted_initial_edge_list;
+	Graph test_graph = Graph(0);
 
-	Graph p = algorithmA(&test_graph);
+	initial_edge_list = load_from_file(argv[1]);
 
-	clock_t end = clock();
+	for (weighted_edge_list::iterator iter = (*initial_edge_list).begin(); iter != (*initial_edge_list).end(); iter++) {
 
-	long seconds;
+		test_graph.addEdge(std::get<0>(*iter), std::get<1>(*iter)); // Initialize the adjacency list
+		unweighted_initial_edge_list.push_back(unweighted_edge(std::get<0>(*iter), std::get<1>(*iter)));
+	}
 
-	seconds = long(end - begin) / CLOCKS_PER_SEC;
+	assert("The provided file was empty.", initial_edge_list.size() < 1);
 
-	std::list<std::pair<int, int>> result_edge_list;
-	std::list<std::tuple<int, int, double>> result_weighted_edge_list;
-	result_edge_list = p.toEdgeList();
+	if (is_planar(&test_graph)) {
+		std::cout << "The provided graph is already planar.\n";
+		return 0;
+	}
 
-	for (std::list<std::tuple<int, int, double>>::iterator iter2 = edge_list.begin(); iter2 != edge_list.end(); iter2++) {
-		if (std::find(result_edge_list.begin(), result_edge_list.end(), std::pair<int, int>(std::get<0>(*iter2), std::get<1>(*iter2))) != result_edge_list.end()) {
+	std::clock_t begin = clock(); // Used to measure the execution time of the algorithm
+	Graph result_graph = algorithmA(&test_graph); // Execute the planar graph filter on the graph
+	clock_t end = clock(); // End execution measure
+
+	long seconds = long(end - begin) / CLOCKS_PER_SEC; // Calculate the runtime in seconds
+
+	weighted_edge_list result_weighted_edge_list;
+	unweighted_edge_list *result_edge_list = result_graph.toEdgeList();
+
+	assert("The result graph is not planar! THIS SHOULD NOT HAPPEN!\nIf this happens, there is a major error in the implementatino of the planar graph heuristic.");
+
+	for (weighted_edge_list::iterator iter2 = (*initial_edge_list).begin(); iter2 != (*initial_edge_list).end(); iter2++) {
+		if (std::find((*result_edge_list).begin(), (*result_edge_list).end(), unweighted_edge(std::get<0>(*iter2), std::get<1>(*iter2))) != (*result_edge_list).end()) {
 			result_weighted_edge_list.push_back(*iter2);
 		}
 	}
 
-	writeToFile(result_weighted_edge_list, isPlanar(result_edge_list, p.nodeCount()), isPlanar(unweighted_edge_list, test_graph.nodeCount()), edge_list.size(), seconds);
+	write_to_file(result_weighted_edge_list, (*initial_edge_list).size(), seconds, argv[2]);
 
 	return 0;
 }
