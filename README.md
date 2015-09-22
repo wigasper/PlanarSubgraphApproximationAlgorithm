@@ -2,4 +2,4 @@
 
 The program accepts command line arguments in the following format:
   
-```./PlanarSubgraphApproximationAlgorithm <InputFile> <OutputFil>```
+```./PlanarSubgraphApproximationAlgorithm <InputFilePath> <OutputFilePath>```
