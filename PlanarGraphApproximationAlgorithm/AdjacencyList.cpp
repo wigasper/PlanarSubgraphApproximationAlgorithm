@@ -51,7 +51,7 @@ public:
 		//TODO
 	}
 
-	edge_list* toEdgeList() {
+	edge_list toEdgeList() {
 		std::list<std::pair<int, int>> edge_list;
 
 		for (size_t i = 0; i < adjacencyListArray.size(); i++) {
@@ -61,7 +61,7 @@ public:
 			}
 		}
 
-		return &edge_list;
+		return edge_list;
 	}
 
 	void printGraph () {
