@@ -6,8 +6,9 @@
 #include <queue>
 #include <tuple>
 #include <map>
+#include <iostream>
 
-enum NodeState { VISITED, QUEUED, UNVISITED };
+enum VisitedState { VISITED, QUEUED, UNVISITED };
 typedef int node;
 typedef std::pair<node, node> edge;
 
@@ -17,7 +18,7 @@ typedef std::pair<node, node> edge;
 std::list<node> nodeBFS(node startNode, Graph *graph) {
 
 	std::queue<node> nodeQueue;
-	std::vector<NodeState> visited((*graph).nodeCount(), UNVISITED);
+	std::vector<VisitedState> visited((*graph).getNumNodes(), UNVISITED);
 	std::list<node> component;
 
 	nodeQueue.push(startNode);
@@ -47,10 +48,10 @@ std::list<node> nodeBFS(node startNode, Graph *graph) {
 // the nodes in seperate components in the graph.
 std::vector<std::list<node>> getComponents(Graph *graph) {
 
-	std::vector<NodeState> visited((*graph).nodeCount(), UNVISITED); // The vector that signifies the traversal state of each node
+	std::vector<VisitedState> visited((*graph).getNumNodes(), UNVISITED); // The vector that signifies the traversal state of each node
 	std::vector<std::list<node>> components; // The list of components
 
-	std::vector<NodeState>::iterator unvisited;
+	std::vector<VisitedState>::iterator unvisited;
 
 	while ((unvisited = std::find(visited.begin(), visited.end(), UNVISITED)) != visited.end()) { // While there is still an unvisited node.
 		std::list<node> component = nodeBFS(unvisited - visited.begin(), graph);
@@ -71,7 +72,7 @@ std::vector<std::list<node>> getComponents(Graph *graph) {
 std::list<std::pair<node, node>> edgeBFS(node startNode, Graph *graph) { 
 
 	std::queue<node> nodeQueue;
-	std::vector<NodeState> visited((*graph).nodeCount(), UNVISITED);
+	std::vector<VisitedState> visited((*graph).getNumNodes(), UNVISITED);
 	std::list<edge> edge_list;
 	nodeQueue.push(startNode);
 
@@ -97,10 +98,59 @@ std::list<std::pair<node, node>> edgeBFS(node startNode, Graph *graph) {
 	return edge_list;
 }
 
+std::list<edge> intercomponentSpanningTree(Graph *graph, std::vector<std::list<node>> *componentList) {
+
+	std::vector<std::list<node>> components = *componentList;
+
+	std::map<int, int> nodeToComponent; // Used to map a node to it's component number in order to facilitate a fast lookup of the component any given node is in
+
+	for (std::size_t i = 0; i < components.size(); i++){ // Create the map from node to component
+		for (std::list<int>::iterator iter = components[i].begin(); iter != components[i].end(); iter++){
+			nodeToComponent[*iter] = i;
+		}
+	}
+
+	std::queue<int> componentQueue;
+	std::vector<VisitedState> visited(components.size(), UNVISITED);
+	std::list<edge> edge_list;
+	componentQueue.push(0);
+
+	while (!componentQueue.empty()) { // componentQueue will be empty when every component has been visited
+		int currentComponent = componentQueue.front();
+		componentQueue.pop();
+
+		if (visited[currentComponent] != VISITED) {
+			visited[currentComponent] = VISITED;
+
+			std::list<node> component = components[currentComponent];
+
+			for (std::list<node>::iterator node1 = component.begin(); node1 != component.end(); node1++){ // Go through the component
+				std::list<node> *adj = (*graph).getList(*node1);
+
+				for (std::list<node>::iterator node2 = (*adj).begin(); node2 != (*adj).end(); node2++){ // Go through the adjacency list
+					int newComponent = nodeToComponent[*node2];
+
+					if (visited[newComponent] == UNVISITED && currentComponent != newComponent) { // If the edge is intercomponent and the new component is invisited
+						visited[newComponent] = QUEUED;
+						edge_list.push_back(edge(*node1, *node2));
+						componentQueue.push(newComponent);
+					}
+				}
+			}
+		}
+	}
+
+	return edge_list;
+
+}
+
 // Bounded degree graph
 Graph algorithmA(Graph *graph) { // The greedy maximal planar subgraph algorithm.
 
-	const int v = (*graph).nodeCount(); //Get the number of nodes in the graph
+
+	std::cout << "\n\nNum nodes in component: " << (*graph).getNumNodesWithEdges();
+
+	const int v = (*graph).getNumNodes(); //Get the number of nodes in the graph
 
 	Graph E1 = Graph(v);
 	std::list<int> nu;
@@ -175,24 +225,34 @@ Graph algorithmA(Graph *graph) { // The greedy maximal planar subgraph algorithm
 	std::vector<std::list<int>> components;
 	components = getComponents(&E1); // Find the components in the graph
 
+	std::list<edge> componentSpanningTree = intercomponentSpanningTree(graph, &components);
+	
+	for (std::list<edge>::iterator iter = componentSpanningTree.begin(); iter != componentSpanningTree.end(); iter++){ // Go through the spanning tree edge list
+			E1.addEdge(*iter); // Add the edge to the graph
+	}
 
-
-	std::map<int, int> nodeToComponent; // Used to map a node to it's component number in order to facilitate a fast lookup of the component any given node is in
+	/*std::map<int, int> nodeToComponent; // Used to map a node to it's component number in order to facilitate a fast lookup of the component any given node is in
 
 	for (std::size_t i = 0; i < components.size(); i++){ // Create the map from node to component
 		for (std::list<int>::iterator iter = components[i].begin(); iter != components[i].end(); iter++){
 			nodeToComponent[*iter] = i;
 		}
-	}
+	}*/
 	// The next section should create a spanning tree between the components of the graph
 
-	std::list<edge> spanning_tree = edgeBFS(0, graph); // Get a spanning tree of the graph
+	/*node startNode = 0;
+
+	while ((*(*graph).getList(startNode)).size() == 0){
+		startNode++;
+	}
+
+	std::list<edge> spanning_tree = edgeBFS(startNode, graph); // Get a spanning tree of the graph
 
 	for (std::list<edge>::iterator iter = spanning_tree.begin(); iter != spanning_tree.end(); iter++){ // Go through the spanning tree edge list
 		if (nodeToComponent[(*iter).first] != nodeToComponent[(*iter).second]) { //If both ends of the edge are NOT in the same component
 			E1.addEdge(*iter); // Add the edge to the graph
 		}
-	}
+	}*/
 
 
 	/*std::map<edge, edge> edgesH;
@@ -220,6 +280,8 @@ Graph algorithmA(Graph *graph) { // The greedy maximal planar subgraph algorithm
 		E1.addEdge(edgesH[*iter]);
 	}*/
 
+	std::cout << "\nNum nodes in result: " << E1.getNumNodesWithEdges() << "\n\n";
+
 	return E1;
 }// End algorithmA
 
@@ -239,10 +301,12 @@ Graph multipleComponentAlgorithmA(Graph *graph) {
 			}
 		}
 
-		if (component.nodeCount() != 0){
+		if (component.getNumNodes() != 0){
 			components.push_back(component);
 		}
 	}
+
+	std::cout << "\nRunning algorithm A on " << components.size() << " component(s).";
 
 	for (std::list<Graph>::iterator component = components.begin(); component != components.end(); component++){
 		Graph g = algorithmA(&(*component));

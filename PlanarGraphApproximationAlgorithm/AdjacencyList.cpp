@@ -18,7 +18,7 @@ public:
 
 	void addEdge(int a, int b) {
 
-		if ( a + 1 > adjacencyListArray.size() || b + 1 > adjacencyListArray.size()){
+		if ((size_t)a + 1 > adjacencyListArray.size() || (size_t)b + 1 > adjacencyListArray.size()){
 			adjacencyListArray.resize((a > b ? a + 1 : b + 1));
 		}
 
@@ -31,7 +31,7 @@ public:
 		int a = edge.first;
 		int b = edge.second;
 
-		if (a + 1 > adjacencyListArray.size() || b + 1 > adjacencyListArray.size()){
+		if ((size_t)a + 1 > adjacencyListArray.size() || (size_t)b + 1 > adjacencyListArray.size()){
 			adjacencyListArray.resize((a > b ? a + 1 : b + 1));
 		}
 
@@ -43,15 +43,48 @@ public:
 		return &adjacencyListArray[node];
 	}
 
-	int nodeCount () {
+	int getNumNodes () {
 		return adjacencyListArray.size();
 	}
 
-	bool removeEdge(int a, int b) {
-		//TODO
+	int getNumEdges() {
+		trim();
+		int numEdges = 0;
+		for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+			numEdges += (*iter).size();
+		}
+
+		return numEdges / 2;
 	}
 
+	//bool removeEdge(int a, int b) {
+		//TODO
+	//}
+
+	void trim() {
+		for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+			(*iter).unique(); 
+		}
+	}
+
+	void sort() {
+		trim();
+		for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+			(*iter).sort();
+		}
+	}
+
+
 	edge_list toEdgeList() {
+		return toEdgeList(false);
+	}
+
+	edge_list toEdgeList(bool sortt) {
+
+		if (sortt) {
+			sort();
+		}
+
 		std::list<std::pair<int, int>> edge_list;
 
 		for (size_t i = 0; i < adjacencyListArray.size(); i++) {
@@ -82,6 +115,19 @@ public:
 				std::cout << " " << *iter;
 			}
 		}
+	}
+
+	int getNumNodesWithEdges(){
+
+		int num = 0;
+
+		for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+			if ((*iter).size() != 0) {
+				num++;
+			}
+		}
+
+		return num;
 	}
 
 };
