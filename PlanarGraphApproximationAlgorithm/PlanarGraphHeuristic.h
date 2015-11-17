@@ -10,4 +10,6 @@ std::list<int> nodeBFS(int startNode, Graph *graph);
 
 std::list<std::pair<int, int>> edgeBFS(int startNode, Graph *graph);
 
+Graph multipleComponentAlgorithmA(Graph *graph);
+
 #endif

@@ -12,7 +12,6 @@ typedef int node;
 typedef std::pair<node, node> edge;
 
 
-
 // Takes a start node and a graph and returns the list of nodes that are 
 //  in the same component as the start node.
 std::list<node> nodeBFS(node startNode, Graph *graph) {
@@ -35,7 +34,6 @@ std::list<node> nodeBFS(node startNode, Graph *graph) {
 			for (std::list<node>::iterator iter = (*adj).begin(); iter != (*adj).end(); iter++){ // Go through the adjacency list
 				if (visited[*iter] == UNVISITED) {
 					visited[*iter] = QUEUED;
-					component.push_back(*iter);
 					nodeQueue.push(*iter);
 				}
 			}
@@ -74,7 +72,7 @@ std::list<std::pair<node, node>> edgeBFS(node startNode, Graph *graph) {
 
 	std::queue<node> nodeQueue;
 	std::vector<NodeState> visited((*graph).nodeCount(), UNVISITED);
-	std::list<std::pair<node, node>> edge_list;
+	std::list<edge> edge_list;
 	nodeQueue.push(startNode);
 
 	while (!nodeQueue.empty()) { // nodeQueue will be empty when every node has been visited
@@ -89,7 +87,7 @@ std::list<std::pair<node, node>> edgeBFS(node startNode, Graph *graph) {
 			for (std::list<node>::iterator iter = (*adj).begin(); iter != (*adj).end(); iter++){ // Go through the adjacency list
 				if (visited[*iter] == UNVISITED) {
 					visited[*iter] = QUEUED;
-					edge_list.push_back(std::pair<node, node> (currentNode, *iter));
+					edge_list.push_back(edge (currentNode, *iter));
 					nodeQueue.push(*iter);
 				}
 			}
@@ -186,9 +184,18 @@ Graph algorithmA(Graph *graph) { // The greedy maximal planar subgraph algorithm
 			nodeToComponent[*iter] = i;
 		}
 	}
+	// The next section should create a spanning tree between the components of the graph
+
+	std::list<edge> spanning_tree = edgeBFS(0, graph); // Get a spanning tree of the graph
+
+	for (std::list<edge>::iterator iter = spanning_tree.begin(); iter != spanning_tree.end(); iter++){ // Go through the spanning tree edge list
+		if (nodeToComponent[(*iter).first] != nodeToComponent[(*iter).second]) { //If both ends of the edge are NOT in the same component
+			E1.addEdge(*iter); // Add the edge to the graph
+		}
+	}
 
 
-	std::map<edge, edge> edgesH;
+	/*std::map<edge, edge> edgesH;
 	Graph H(components.size());
 
 	for (std::size_t current_component = 0; current_component < components.size(); current_component++){ // Go through each component
@@ -211,7 +218,41 @@ Graph algorithmA(Graph *graph) { // The greedy maximal planar subgraph algorithm
 
 	for (std::list<edge>::iterator iter = spanning_tree.begin(); iter != spanning_tree.end(); iter++) {
 		E1.addEdge(edgesH[*iter]);
-	}
+	}*/
 
 	return E1;
 }// End algorithmA
+
+Graph multipleComponentAlgorithmA(Graph *graph) {
+
+	Graph planarGraph = Graph(0);
+
+	std::vector<std::list<node>> componentsNodes = getComponents(graph);
+	std::list<Graph> components;
+
+	for (std::vector<std::list<node>>::iterator iter = componentsNodes.begin(); iter != componentsNodes.end(); iter++){
+		Graph component = Graph(0);
+		for (std::list<node>::iterator iter2 = (*iter).begin(); iter2 != (*iter).end(); iter2++){
+			std::list<node> *adj = (*graph).getList((*iter2));
+			for (std::list<node>::iterator iter3 = (*adj).begin(); iter3 != (*adj).end(); iter3++){
+				component.addEdge(*iter2, *iter3);
+			}
+		}
+
+		if (component.nodeCount() != 0){
+			components.push_back(component);
+		}
+	}
+
+	for (std::list<Graph>::iterator component = components.begin(); component != components.end(); component++){
+		Graph g = algorithmA(&(*component));
+
+		std::list<edge> edge_list = g.toEdgeList();
+
+		for (std::list<edge>::iterator iter = edge_list.begin(); iter != edge_list.end(); iter++){
+			planarGraph.addEdge(*iter);
+		}
+	}
+	
+	return planarGraph;
+}

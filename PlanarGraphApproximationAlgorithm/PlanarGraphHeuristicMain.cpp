@@ -130,7 +130,7 @@ int main(int argc, char* argv[]){
 	}
 
 	std::clock_t begin = clock(); // Used to measure the execution time of the algorithm
-	Graph result_graph = algorithmA(&test_graph); // Execute the planar graph filter on the graph
+	Graph result_graph = multipleComponentAlgorithmA(&test_graph); // Execute the planar graph filter on the graph
 	clock_t end = clock(); // End execution measure
 
 	long seconds = long(end - begin) / CLOCKS_PER_SEC; // Calculate the runtime in seconds
@@ -138,7 +138,15 @@ int main(int argc, char* argv[]){
 	weighted_edge_list result_weighted_edge_list;
 	unweighted_edge_list result_edge_list = result_graph.toEdgeList();
 
-	assert("The result graph is not planar! THIS SHOULD NOT HAPPEN!\nIf this happens, there is a major error in the implementatino of the planar graph heuristic.", isPlanar(result_graph));
+	if (!is_planar(result_graph)){
+		std::cout << "\nError! The result graph is not planar!";
+		exit(EXIT_FAILURE);
+
+	}
+
+	std::cout << "Initial graph: " << test_graph.nodeCount() << " nodes";
+	std::cout << "Result graph: " << result_graph.nodeCount() << " nodes";
+
 
 	for (weighted_edge_list::iterator iter2 = initial_edge_list.begin(); iter2 != initial_edge_list.end(); iter2++) {
 		if (std::find(result_edge_list.begin(), result_edge_list.end(), unweighted_edge(std::get<0>(*iter2), std::get<1>(*iter2))) != result_edge_list.end()) {

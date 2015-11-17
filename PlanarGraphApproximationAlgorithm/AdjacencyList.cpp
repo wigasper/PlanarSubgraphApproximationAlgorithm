@@ -64,6 +64,16 @@ public:
 		return edge_list;
 	}
 
+	void addComponent(Graph *graph){
+		int nodes = adjacencyListArray.size();
+		
+		std::list<std::pair<int, int>> edge_list = (*graph).toEdgeList();
+
+		for (std::list<edge>::iterator edge = edge_list.begin(); edge != edge_list.end(); edge++) {
+			addEdge((*edge).first + nodes, (*edge).second + nodes);
+		}
+	}
+
 	void printGraph () {
 
 		for (size_t i = 0; i < adjacencyListArray.size(); i++)  {
