@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
+#include <map>
 
 typedef int node;
 typedef std::pair<node, node> edge;
@@ -9,21 +10,39 @@ typedef std::list<edge> edge_list;
 
 class Graph {
 private:
-	std::vector<std::list<int>> adjacencyListArray;
+	//std::vector<std::list<int>> adjacencyListArray;
+	std::map<node, std::list<node>> adjacencyListArray;
 
 public:
-	Graph(int n) {
-		adjacencyListArray = std::vector<std::list<int>>(n);
+	//Graph(int n) {
+		//adjacencyListArray = std::vector<std::list<int>>(n);
+	//}
+
+	std::list<node> getNodes() {
+		std::list<node> nodeList;
+		for (std::map<node, std::list<node>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+			nodeList.push_back((*iter).first);
+		}
+
+		return nodeList;
+	}
+
+	void addNode(node label) {
+		adjacencyListArray[label];
 	}
 
 	void addEdge(int a, int b) {
 
-		if ((size_t)a + 1 > adjacencyListArray.size() || (size_t)b + 1 > adjacencyListArray.size()){
+		/*if ((size_t)a + 1 > adjacencyListArray.size() || (size_t)b + 1 > adjacencyListArray.size()){
 			adjacencyListArray.resize((a > b ? a + 1 : b + 1));
 		}
 
 		adjacencyListArray[a].push_front(b);
 		adjacencyListArray[b].push_front(a);
+		*/
+		adjacencyListArray[a].push_front(b);
+		adjacencyListArray[b].push_front(a);
+
 	}
 
 	void addEdge(std::pair<int, int> edge) {
@@ -31,16 +50,16 @@ public:
 		int a = edge.first;
 		int b = edge.second;
 
-		if ((size_t)a + 1 > adjacencyListArray.size() || (size_t)b + 1 > adjacencyListArray.size()){
+		/*if ((size_t)a + 1 > adjacencyListArray.size() || (size_t)b + 1 > adjacencyListArray.size()){
 			adjacencyListArray.resize((a > b ? a + 1 : b + 1));
-		}
+		}*/
 
 		adjacencyListArray[a].push_front(b);
 		adjacencyListArray[b].push_front(a);
 	}
 
 	std::list<int>* getList(int node) {
-		return &adjacencyListArray[node];
+		return &adjacencyListArray.at(node);
 	}
 
 	int getNumNodes () {
@@ -50,8 +69,12 @@ public:
 	int getNumEdges() {
 		trim();
 		int numEdges = 0;
-		for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+		/*for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
 			numEdges += (*iter).size();
+		}*/
+
+		for (std::map<node, std::list<node>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+			numEdges += (*iter).second.size();
 		}
 
 		return numEdges / 2;
@@ -62,15 +85,24 @@ public:
 	//}
 
 	void trim() {
-		for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+
+		sort();
+		/*for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
 			(*iter).unique(); 
+		}*/
+
+		for (std::map<node, std::list<node>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+			(*iter).second.unique();
 		}
 	}
 
 	void sort() {
-		trim();
-		for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+		/*for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
 			(*iter).sort();
+		}*/
+
+		for (std::map<node, std::list<node>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+			(*iter).second.sort();
 		}
 	}
 
@@ -87,12 +119,19 @@ public:
 
 		std::list<std::pair<int, int>> edge_list;
 
-		for (size_t i = 0; i < adjacencyListArray.size(); i++) {
+		for (std::map<node, std::list<node>>::iterator iter1 = adjacencyListArray.begin(); iter1 != adjacencyListArray.end(); iter1++) {
+			std::list<node> adj = (*iter1).second;
+			for (std::list<int>::iterator iter2 = adj.begin(); iter2 != adj.end(); iter2++) {
+				edge_list.push_back(std::pair<int, int>((*iter1).first, *iter2));
+			}
+		}
+
+		/*for (size_t i = 0; i < adjacencyListArray.size(); i++) {
 			std::list<int> adj = adjacencyListArray[i];
 			for (std::list<int>::iterator iter = adj.begin(); iter != adj.end(); iter++) {
 				edge_list.push_back(std::pair<int, int>(i, *iter));
 			}
-		}
+		}*/
 
 		return edge_list;
 	}
@@ -121,13 +160,35 @@ public:
 
 		int num = 0;
 
-		for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+		/*for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
 			if ((*iter).size() != 0) {
+				num++;
+			}
+		}*/
+
+		for (std::map<node, std::list<node>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+			if ((*iter).second.size() != 0) {
 				num++;
 			}
 		}
 
 		return num;
 	}
+
+	node first() {
+		return (*adjacencyListArray.begin()).first;
+	}
+
+	/*void eliminateDisconnectedNodes() {
+
+		std::vector<std::list<int>> oldAdjacencyListArray = adjacencyListArray;
+		adjacencyListArray = std::vector<std::list<int>>(0);
+
+		for (std::vector<std::list<int>>::iterator iter = adjacencyListArray.begin(); iter != adjacencyListArray.end(); iter++) {
+			if ((*iter).size() != 0) {
+				adjacencyListArray.push_back(*iter);
+			}
+		}
+	}*/
 
 };

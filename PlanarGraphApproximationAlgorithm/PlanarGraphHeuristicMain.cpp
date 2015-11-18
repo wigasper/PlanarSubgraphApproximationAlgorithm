@@ -102,7 +102,7 @@ int main(int argc, char* argv[]){
 
 	weighted_edge_list input_edge_list;
 	unweighted_edge_list unweighted_initial_edge_list;
-	Graph input_graph = Graph(0);
+	Graph input_graph = Graph();
 
 
 	std::string file_path = argv[1];
@@ -116,6 +116,8 @@ int main(int argc, char* argv[]){
 		input_graph.addEdge(std::get<0>(*iter), std::get<1>(*iter)); // Initialize the adjacency list
 		unweighted_initial_edge_list.push_back(unweighted_edge(std::get<0>(*iter), std::get<1>(*iter)));
 	}
+
+	input_graph.trim();
 
 	if (input_edge_list.size() < 1){
 		std::cout << "The provided file is empty";
@@ -153,11 +155,11 @@ int main(int argc, char* argv[]){
 	std::cout << "\nExecution time: " << hours << "h " << minutes % 60 << "m " << seconds % 60 << "s";
 
 	std::cout << "\n\nInitial graph:";
-	std::cout << "\nNodes: " << input_graph.getNumNodes();
+	std::cout << "\nNodes: " << input_graph.getNumNodesWithEdges();
 	std::cout << "\nEdges: " << input_num_edges;
 
 	std::cout << "\n\nResult graph:";
-	std::cout << "\nNodes: " << result_graph.getNumNodes();
+	std::cout << "\nNodes: " << result_graph.getNumNodesWithEdges();
 	std::cout << "\nEdges: " << result_num_edges;
 
 	std::cout << "\n\nPercent of edges retained: " << (float)result_num_edges / (float)input_num_edges * 100 << "%";
