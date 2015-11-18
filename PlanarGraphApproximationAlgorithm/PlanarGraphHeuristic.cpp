@@ -170,7 +170,7 @@ std::list<edge> intercomponentSpanningTree(Graph *graph, std::vector<std::list<n
 // Bounded degree graph
 Graph algorithmA(Graph *graph) { // The greedy maximal planar subgraph algorithm.
 
-	std::cout << "\n\nNum nodes in component: " << (*graph).getNumNodes();
+	std::cout << "\nNum nodes in component: " << (*graph).getNumNodes();
 
 	const int v = (*graph).getNumNodes(); //Get the number of nodes in the graph
 
@@ -179,18 +179,21 @@ Graph algorithmA(Graph *graph) { // The greedy maximal planar subgraph algorithm
 	std::list<int> active;
 	std::list<int> used;
 
+	if (v == 1) { // This is for the unique case where the original graph file had a single node whose only edge was from itself to itself.
+		E1.addEdge((*graph).first(), (*graph).first());
+		return E1;
+	}
+
 	std::list<node> nodeList = (*graph).getNodes();
 	for (std::list<node>::iterator i = nodeList.begin(); i != nodeList.end(); ++i) {
 		E1.addNode((*i));
 	}
 
-	for (int i = 0; i < v; i++) {// Initialize the nu array with all nodes
-		nu.push_front(i);
-	}
+	nu = nodeList;
 
 	while (!nu.empty()) { // While there are nodes in nu
 
-		std::vector<int> aux(v, 0); // Initialize the auxiliary array
+		std::map<node, int> aux; // Initialize the auxiliary array
 
 		if (active.empty()) { // If active is empty take the front element from nu and add it to active.
 			active.push_front(nu.back());
@@ -203,6 +206,10 @@ Graph algorithmA(Graph *graph) { // The greedy maximal planar subgraph algorithm
 		active.pop_front();
 
 		std::list<int> *xList = (*graph).getList(x); // Get the adjacenecy list for the chosen node x.
+
+		for (std::list<node>::iterator i = (*xList).begin(); i != (*xList).end(); ++i) {
+			aux[*i] = 0;
+		}
 
 		for (std::list<int>::iterator iter = (*xList).begin(); iter != (*xList).end(); iter++) { // Set up the auxiliary array
 			aux[*iter] = 1;
@@ -255,7 +262,7 @@ Graph algorithmA(Graph *graph) { // The greedy maximal planar subgraph algorithm
 			E1.addEdge(*iter); // Add the edge to the graph
 	}
 
-	std::cout << "\nNum nodes in result: " << E1.getNumNodesWithEdges() << "\n\n";
+	std::cout << " - Num nodes in result: " << E1.getNumNodesWithEdges();
 
 	return E1;
 }// End algorithmA

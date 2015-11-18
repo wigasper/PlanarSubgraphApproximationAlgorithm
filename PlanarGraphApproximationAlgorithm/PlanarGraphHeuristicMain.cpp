@@ -38,8 +38,6 @@ bool is_planar(Graph &graph) {
 // Returns: A weighted edge list
 weighted_edge_list load_from_file(std::string file_path) {
 
-	std::cout << "Loading file...\n";
-
 	weighted_edge_list edge_list;
 
 	int a, b;
@@ -107,6 +105,8 @@ int main(int argc, char* argv[]){
 
 	std::string file_path = argv[1];
 
+
+	std::cout << "\nLoading file...";
 	input_edge_list = load_from_file(file_path);
 
 	weighted_edge_list temp = input_edge_list;
@@ -117,6 +117,7 @@ int main(int argc, char* argv[]){
 		unweighted_initial_edge_list.push_back(unweighted_edge(std::get<0>(*iter), std::get<1>(*iter)));
 	}
 
+	std::cout << "\nReadying adjacency list...";
 	input_graph.trim();
 
 	if (input_edge_list.size() < 1){
@@ -124,6 +125,7 @@ int main(int argc, char* argv[]){
 		exit(EXIT_FAILURE);
 	}
 
+	std::cout << "\nChecking to see if graph is already planar...";
 	if (is_planar(input_graph)) {
 		std::cout << "The provided graph is already planar.\n";
 		exit(EXIT_SUCCESS);
@@ -174,7 +176,7 @@ int main(int argc, char* argv[]){
 
 	write_to_file(result_weighted_edge_list, argv[2]);
 
-	std::cin.get();
+	//std::cin.get();
 
 	return 0;
 }
