@@ -1,5 +1,7 @@
 # planarity-filter
 
+Requires Boost and CMake
+
 ```bash
 $ mkdir build && cd build
 $ cmake ..
